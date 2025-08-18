@@ -1,0 +1,41 @@
+# ===== VCS / Editor
+.git
+.gitignore
+.vscode/
+.idea/
+
+# ===== Env & Secrets (don’t bake into images)
+.env
+.env.*.local
+*.env
+*.pem
+*.key
+firebase/*adminsdk*.json
+firebase/*.json
+
+# ===== Python artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ===== Django optional outputs
+# (keep if you generate locally; remove if you collect in-container)
+# staticfiles/
+# media/
+*.sqlite3
+
+# ===== Stray Node bits (just in case)
+node_modules/
+dist/
+out/
+.next/
+
+# ===== Logs
+*.log

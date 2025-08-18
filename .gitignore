@@ -1,0 +1,38 @@
+# ========== Editors / OS ==========
+**/.idea/
+**/.vscode/
+.DS_Store
+Thumbs.db
+
+# ========== Env files ==========
+# ignore any .env and *.env files at any depth
+**/.env
+.env
+*.env
+# keep example template(s)
+!**/.env.example
+!.env.example
+
+# ========== Node / Next ==========
+**/node_modules/
+**/.next/
+**/dist/
+**/out/
+npm-debug.log*
+yarn-error.log*
+.pnpm-store/
+
+# ========== Python ==========
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+**/.venv/
+**/venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ========== Databases (optional) ==========
+*.sqlite3
