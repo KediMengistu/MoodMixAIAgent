@@ -20,7 +20,7 @@ jobs:
         run: python manage.py check
       - name: Placeholder tests
         run: |
-          echo "def test_true(): assert True" > tests_smoke.py
+          echo "def test_true(): assert True" > test_smoke.py
           python -m pip install pytest
           pytest -q
 
