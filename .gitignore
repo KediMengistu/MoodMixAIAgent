@@ -36,3 +36,36 @@ htmlcov/
 
 # ========== Databases (optional) ==========
 *.sqlite3
+
+# ===== Next.js / Frontend caches =====
+**/.eslintcache
+**/*.tsbuildinfo
+**/.swc/
+**/.turbo/
+**/.vercel/
+
+# ===== Env variants (keep examples) =====
+# This catches .env.local, .env.production, .env.development.local, etc.
+**/.env*
+!**/.env.example
+!**/.env.*.example
+
+# ===== Django collected + uploads =====
+# Keep your source "static/" checked in; ignore the collected output and uploads.
+**/staticfiles/
+**/media/
+
+# ===== Logs =====
+**/*.log
+logs/
+
+# ===== Coverage & test artifacts =====
+.coverage*
+coverage/
+pytestdebug.log
+
+# ===== Python tool/version managers =====
+.python-version
+
+# ===== Firebase creds (if present locally) =====
+**/firebase/firebase-adminsdk.json
