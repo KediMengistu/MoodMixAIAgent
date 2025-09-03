@@ -69,3 +69,7 @@ pytestdebug.log
 
 # ===== Firebase creds (if present locally) =====
 **/firebase/firebase-adminsdk.json
+
+.env*
+!.env.example
+!.env.*.example
