@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/popover";
 import { Menu as MenuIcon } from "lucide-react";
 import { BsMusicNoteBeamed } from "react-icons/bs";
+import { useAppStore } from "@/store/appStore";
 
 // Keep only About (leftmost) and Playlist (formerly Features)
 type NavLinkGroup = {
@@ -101,7 +102,10 @@ ListItem.displayName = "ListItem";
 
 // Overview tile (clickable, centered summary, pointer on hover)
 function OverviewTile({ group }: { group: "About" | "Playlist" }) {
-  const summaries: Record<typeof group, { heading: string; body: string }> = {
+  const summaries: Record<
+    "About" | "Playlist",
+    { heading: string; body: string }
+  > = {
     About: {
       heading: "Overview",
       body: "Purpose explains the problem we solve, Architecture shows how pieces connect, and Tech Stack lists the tools powering the app.",
@@ -132,6 +136,8 @@ function OverviewTile({ group }: { group: "About" | "Playlist" }) {
 }
 
 export function NavBar() {
+  const logout = useAppStore((s) => s.logout);
+  const status = useAppStore((s) => s.status);
   return (
     <Card
       className={cn(
@@ -145,9 +151,9 @@ export function NavBar() {
       {/* COL 1: Nav menu (mobile trigger + desktop menu) */}
       <div>
         {/* Mobile */}
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center gap-2">
           <Popover>
-            <PopoverTrigger asChild>
+            <PopoverTrigger asChild className="hover:cursor-pointer">
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <MenuIcon className="h-4 w-4" />
               </Button>
@@ -176,19 +182,31 @@ export function NavBar() {
               </nav>
             </PopoverContent>
           </Popover>
+
+          {/* Mobile Exit button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-3 text-[11px] rounded-full shadow-none hover:cursor-pointer"
+            onClick={async () => {
+              await logout();
+            }}
+            disabled={status === "loading"}
+          >
+            Sign out
+          </Button>
         </div>
 
         {/* Desktop */}
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-2">
           <NavigationMenu>
             <NavigationMenuList className="gap-1">
               {NAV_LINKS.map((group) => {
-                // Ensure identical font size for About & Playlist triggers
                 return (
                   <NavigationMenuItem key={group.label}>
                     <NavigationMenuTrigger
                       className={cn(
-                        "text-[11px] h-8 px-2", // exact same size for both
+                        "text-[11px] h-8 px-2",
                         "bg-transparent hover:bg-transparent data-[state=open]:bg-transparent",
                         "rounded-sm",
                         "cursor-default hover:cursor-pointer",
@@ -218,10 +236,23 @@ export function NavBar() {
               })}
             </NavigationMenuList>
           </NavigationMenu>
+
+          {/* Desktop Exit button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-3 text-[11px] rounded-full shadow-none hover:cursor-pointer"
+            onClick={async () => {
+              await logout();
+            }}
+            disabled={status === "loading"}
+          >
+            Sign out
+          </Button>
         </div>
       </div>
 
-      {/* COL 2: Centered brand name with music note icons */}
+      {/* COL 2: Centered brand icon/link */}
       <div className="flex items-center justify-self-center">
         <a
           href="/home"

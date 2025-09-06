@@ -37,7 +37,7 @@ export function ConnectSpotifyForm({
                   <div className="flex flex-col items-center text-center">
                     <h1 className="text-2xl font-bold">Spotify Setup</h1>
                     <p className="text-muted-foreground text-balance">
-                      MoodMix4U links to a Spotify account.
+                      MoodMix4U links to your Spotify account.
                     </p>
                   </div>
 

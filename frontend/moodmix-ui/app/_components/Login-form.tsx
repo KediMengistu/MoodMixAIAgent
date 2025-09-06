@@ -7,11 +7,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import MoodMix4ULogoImage from "@/public/MoodMix4U_Logo.png";
 import { ModeToggle } from "@/app/_components/Mode-toggle";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAppStore } from "@/store/appStore";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  // inside component:
+  const login = useAppStore((s) => s.login);
+  const status = useAppStore((s) => s.status);
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -53,6 +57,10 @@ export function LoginForm({
                       type="button"
                       className="w-full hover:cursor-pointer"
                       aria-label="Login with Google"
+                      onClick={async () => {
+                        await login();
+                      }}
+                      disabled={status === "loading"}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
