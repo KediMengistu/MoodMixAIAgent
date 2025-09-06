@@ -22,6 +22,7 @@ export function ModeToggle({ className }: Props) {
         aria-label="Switch to dark mode"
         // Keeping your Preline classes for the look; actual show/hide controlled below.
         className={cn(
+          "hover:cursor-pointer",
           "hs-dark-mode-active:hidden block hs-dark-mode font-medium text-gray-800 rounded-full",
           "hover:bg-gray-200 focus:outline-hidden focus:bg-gray-200",
           "dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800",
@@ -55,7 +56,7 @@ export function ModeToggle({ className }: Props) {
         onClick={() => setTheme("light")}
         aria-label="Switch to light mode"
         className={cn(
-          "hs-dark-mode-active:block hidden hs-dark-mode font-medium text-gray-800 rounded-full",
+          "hs-dark-mode-active:block hidden hs-dark-mode font-medium text-gray-800 rounded-full hover:cursor-pointer",
           "hover:bg-gray-200 focus:outline-hidden focus:bg-gray-200",
           "dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800",
           isDark ? "block" : "hidden"
