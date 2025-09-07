@@ -155,7 +155,11 @@ def playlist_preview(request):
             disallowed_title_artist=uniq_pairs,
         )
     except SpotifyHttpError as e:
-        return Response({"detail": "Spotify error", "status": e.status, "payload": e.payload}, status=502)
+        # Pass through Spotify's real status (401/403/429/5xx...) and propagate Retry-After when present.
+        retry_after = e.headers.get("Retry-After") or e.headers.get("retry-after")
+        headers = {"Retry-After": str(retry_after)} if retry_after else None
+        data = {"detail": "spotify_error", "status": e.status, "payload": e.payload}
+        return Response(data, status=e.status, headers=headers or {})
     except Exception as e:
         return Response({"detail": "Preview failed", "error": str(e)}, status=500)
 
@@ -392,6 +396,10 @@ def playlist_build(request):
         }, status=200)
 
     except SpotifyHttpError as e:
-        return Response({"detail": "Spotify error", "status": e.status, "payload": e.payload}, status=502)
+        # Pass through Spotify's real status (401/403/429/5xx...) and propagate Retry-After when present.
+        retry_after = e.headers.get("Retry-After") or e.headers.get("retry-after")
+        headers = {"Retry-After": str(retry_after)} if retry_after else None
+        data = {"detail": "spotify_error", "status": e.status, "payload": e.payload}
+        return Response(data, status=e.status, headers=headers or {})
     except Exception as e:
         return Response({"detail": "Build failed", "error": str(e)}, status=500)
