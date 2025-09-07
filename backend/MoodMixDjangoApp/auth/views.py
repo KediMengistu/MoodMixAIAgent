@@ -1,4 +1,3 @@
-# MoodMixDjangoApp/auth/views.py
 import os
 import base64
 import secrets
@@ -68,11 +67,13 @@ def auth_moodmix(request):
     )
 
 
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 def auth_spotify(request):
     """
     Start the Spotify OAuth flow (Firebase-protected).
-    Generates a per-attempt state row (scoped to the user's profile), and 302-redirects.
+    - GET  : returns 302 redirect to the authorize URL (manual/browser flow).
+    - POST : returns 200 JSON { "authorize_url": "<...>" } for SPA to navigate.
+            Also returns JSON if the client explicitly asks for JSON via Accept header.
     """
     if not CLIENT_ID or not REDIRECT_URI or not SCOPES:
         return Response(
@@ -93,6 +94,15 @@ def auth_spotify(request):
     SpotifyAuthState.objects.create(profile=profile, state=state, expires_at=expires_at)
 
     authorize_url = _build_spotify_authorize_url(state)
+
+    wants_json = (
+        request.method == "POST"
+        or "application/json" in (request.headers.get("Accept") or "").lower()
+    )
+    if wants_json:
+        return Response({"authorize_url": authorize_url}, status=status.HTTP_200_OK)
+
+    # Default GET behavior: 302 redirect (useful for manual testing)
     return Response(status=status.HTTP_302_FOUND, headers={"Location": authorize_url})
 
 
@@ -121,15 +131,19 @@ def auth_spotify_callback(request):
 
     # Claim state once
     now = timezone.now()
-    claimed = (SpotifyAuthState.objects
-               .filter(state=returned_state, used_at__isnull=True, expires_at__gt=now)
-               .update(used_at=now))
+    claimed = (
+        SpotifyAuthState.objects
+        .filter(state=returned_state, used_at__isnull=True, expires_at__gt=now)
+        .update(used_at=now)
+    )
     if claimed != 1:
         return Response({"detail": "state expired or already used"}, status=status.HTTP_400_BAD_REQUEST)
 
-    srec = (SpotifyAuthState.objects
-            .select_related("profile", "profile__user")
-            .get(state=returned_state))
+    srec = (
+        SpotifyAuthState.objects
+        .select_related("profile", "profile__user")
+        .get(state=returned_state)
+    )
     profile = srec.profile
 
     # Exchange code -> tokens

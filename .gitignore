@@ -9,6 +9,7 @@ Thumbs.db
 **/.env
 .env
 *.env
+*.env.*
 # keep example template(s)
 !**/.env.example
 !.env.example
