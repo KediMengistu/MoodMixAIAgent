@@ -32,21 +32,29 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_EXPOSE_HEADERS = ["Retry-After"]
 
 # Application definition
 
 INSTALLED_APPS = [
-    "MoodMixDjangoApp.apps.MoodmixdjangoappConfig",
+    'MoodMixDjangoApp.apps.MoodmixdjangoappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "corsheaders",
     'rest_framework'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
