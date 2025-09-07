@@ -15,10 +15,12 @@ CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 
 
 class SpotifyHttpError(RuntimeError):
-    def __init__(self, status: int, payload: Any):
+    def __init__(self, status: int, payload: Any, headers: Optional[Dict[str, Any]] = None):
         super().__init__(f"Spotify HTTP {status}: {payload}")
         self.status = status
         self.payload = payload
+        # Keep selected upstream headers (e.g., Retry-After for 429) if available
+        self.headers = dict(headers or {})
 
 
 def _chunk(seq: List[str], size: int):
@@ -66,7 +68,7 @@ class SpotifyClient:
         data = {"grant_type": "refresh_token", "refresh_token": self.profile.spotify_refresh_token}
         r = self.session.post(SPOTIFY_TOKEN_URL, data=data, headers=headers, timeout=self.timeout)
         if r.status_code != 200:
-            raise SpotifyHttpError(r.status_code, self._safe_json(r))
+            raise SpotifyHttpError(r.status_code, self._safe_json(r), r.headers)
 
         payload = r.json()
         self.profile.spotify_access_token = payload["access_token"]
@@ -112,7 +114,7 @@ class SpotifyClient:
                 method, url, params=params, json=json, headers=self._headers(), timeout=self.timeout
             )
         if r.status_code < 200 or r.status_code >= 300:
-            raise SpotifyHttpError(r.status_code, self._safe_json(r))
+            raise SpotifyHttpError(r.status_code, self._safe_json(r), r.headers)
         return self._safe_json(r)
 
     @staticmethod
@@ -142,7 +144,7 @@ class SpotifyClient:
                 self._refresh_token()
                 r = self.session.get(next_url, headers=self._headers(), timeout=self.timeout)
             if r.status_code < 200 or r.status_code >= 300:
-                raise SpotifyHttpError(r.status_code, self._safe_json(r))
+                raise SpotifyHttpError(r.status_code, self._safe_json(r), r.headers)
             data = self._safe_json(r)
             params = {}
         return items
