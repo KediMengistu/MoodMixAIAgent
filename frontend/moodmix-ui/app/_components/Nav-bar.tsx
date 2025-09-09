@@ -136,8 +136,8 @@ function OverviewTile({ group }: { group: "About" | "Playlist" }) {
 }
 
 export function NavBar() {
-  const logout = useAppStore((s) => s.logout);
-  const status = useAppStore((s) => s.status);
+  const logout = useAppStore((s) => s.authLogout);
+  const status = useAppStore((s) => s.authStatus);
   return (
     <Card
       className={cn(

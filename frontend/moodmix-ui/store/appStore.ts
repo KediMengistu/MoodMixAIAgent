@@ -6,7 +6,7 @@ import {
   type SpotifySlice,
 } from "@/slices/spotify/spotifySlice";
 
-type AppState = AuthSlice & SpotifySlice;
+export type AppState = AuthSlice & SpotifySlice;
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -17,6 +17,10 @@ export const useAppStore = create<AppState>()(
       }),
       { name: "app-store" }
     ),
-    { name: "app-store" }
+    {
+      name: "app-store",
+      // Optional: any unlabeled set will appear with this name
+      anonymousActionType: "zustand:setState",
+    }
   )
 );
