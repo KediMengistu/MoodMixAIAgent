@@ -14,8 +14,8 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   // inside component:
-  const login = useAppStore((s) => s.login);
-  const status = useAppStore((s) => s.status);
+  const login = useAppStore((s) => s.authLogin);
+  const status = useAppStore((s) => s.authStatus);
   return (
     <AnimatePresence mode="wait">
       <motion.div
