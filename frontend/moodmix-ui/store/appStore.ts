@@ -5,8 +5,12 @@ import {
   createSpotifySlice,
   type SpotifySlice,
 } from "@/slices/spotify/spotifySlice";
+import {
+  createPlaylistSlice,
+  type PlaylistSlice,
+} from "@/slices/playlist/playlistSlice";
 
-export type AppState = AuthSlice & SpotifySlice;
+export type AppState = AuthSlice & SpotifySlice & PlaylistSlice;
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -14,12 +18,12 @@ export const useAppStore = create<AppState>()(
       (...a) => ({
         ...createAuthSlice(...a),
         ...createSpotifySlice(...a),
+        ...createPlaylistSlice(...a),
       }),
       { name: "app-store" }
     ),
     {
       name: "app-store",
-      // Optional: any unlabeled set will appear with this name
       anonymousActionType: "zustand:setState",
     }
   )

@@ -140,8 +140,9 @@ export const createAuthSlice: StateCreator<
       try {
         await signOutWithGoogle();
 
-        // Reset BOTH slices on successful logout
+        // Reset ALL dependent slices on successful logout
         get().resetAllSpotify?.();
+        get().resetAllPlaylist?.();
 
         set(
           {
@@ -171,8 +172,9 @@ export const createAuthSlice: StateCreator<
       if (detach) return;
       detach = onAuthStateChanged(auth, async (user) => {
         if (!user) {
-          // No user (cold start or cross-tab sign out): reset both slices
+          // No user (cold start or cross-tab sign out): reset dependent slices
           get().resetAllSpotify?.();
+          get().resetAllPlaylist?.();
           set(
             {
               authUser: null,
@@ -199,6 +201,7 @@ export const createAuthSlice: StateCreator<
           // Handshake failed on restore → sign out & keep loggedIn=false
           await fbSignOut(auth).catch(() => {});
           get().resetAllSpotify?.();
+          get().resetAllPlaylist?.();
           set(
             {
               authUser: null,
