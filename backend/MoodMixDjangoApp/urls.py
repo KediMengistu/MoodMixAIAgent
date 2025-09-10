@@ -1,4 +1,3 @@
-# MoodMixDjangoApp/urls.py
 from django.urls import path, include
 from . import views as root_views
 from .llm import views as llm_views
@@ -10,4 +9,6 @@ urlpatterns = [
     path("plan/", llm_views.plan_from_mood, name="plan_from_mood"),
     path("playlist/preview/", music_views.playlist_preview, name="playlist_preview"),
     path("playlist/build/", music_views.playlist_build, name="playlist_build"),
+    # NEW: list all PlaylistProfile rows owned by the authenticated user
+    path("playlist/list/", music_views.playlist_list, name="playlist_list"),
 ]
