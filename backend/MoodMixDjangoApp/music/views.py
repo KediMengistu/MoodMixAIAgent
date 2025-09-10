@@ -403,3 +403,80 @@ def playlist_build(request):
         return Response(data, status=e.status, headers=headers or {})
     except Exception as e:
         return Response({"detail": "Build failed", "error": str(e)}, status=500)
+
+# ---------------- NEW: list user's playlists ----------------
+
+@api_view(["GET"])
+def playlist_list(request):
+    """
+    Returns a paginated list of PlaylistProfile rows created by the authenticated user.
+    Query params:
+      - limit: 1..200 (default 50)
+      - offset: >=0 (default 0)
+
+    200 response:
+    {
+      "count": <total>,
+      "limit": <limit>,
+      "offset": <offset>,
+      "next_offset": <int|null>,
+      "results": [ { <playlist fields> }, ... ]
+    }
+    """
+    # We don't require an active Spotify token just to list our own DB rows.
+    profile = UserProfile.objects.filter(user=request.user).first()
+    # Parse pagination with clamps
+    try:
+        limit = int(request.query_params.get("limit", "50"))
+    except ValueError:
+        limit = 50
+    limit = max(1, min(200, limit))
+
+    try:
+        offset = int(request.query_params.get("offset", "0"))
+    except ValueError:
+        offset = 0
+    offset = max(0, offset)
+
+    if not profile:
+        # No profile yet → empty list
+        return Response(
+            {"count": 0, "limit": limit, "offset": offset, "next_offset": None, "results": []},
+            status=200,
+        )
+
+    qs = PlaylistProfile.objects.filter(owner=profile).order_by("-created_at")
+    total = qs.count()
+    items = qs[offset : offset + limit]
+
+    def _ser(pp: PlaylistProfile) -> dict:
+        return {
+            "id": pp.id,
+            "name": pp.name,
+            "mood": pp.mood,
+            "length": pp.length,
+            "spotify_playlist_id": pp.spotify_playlist_id,
+            "spotify_url": pp.spotify_url,
+            "cached_name": pp.cached_name,
+            "cached_description": pp.cached_description,
+            "cached_images": pp.cached_images,
+            "cached_length": pp.cached_length,
+            "is_public": pp.is_public,
+            "snapshot_id": pp.snapshot_id,
+            "created_at": pp.created_at.isoformat(),
+            "last_synced_at": pp.last_synced_at.isoformat() if pp.last_synced_at else None,
+        }
+
+    results = [_ser(pp) for pp in items]
+    next_offset = offset + limit if (offset + limit) < total else None
+
+    return Response(
+        {
+            "count": total,
+            "limit": limit,
+            "offset": offset,
+            "next_offset": next_offset,
+            "results": results,
+        },
+        status=200,
+    )
