@@ -1,6 +1,6 @@
 // app/connect-spotify/callback/page.tsx
-import { ConnectSpotifyCallback } from "@/app/_components/Connect-spotify-callback";
+import { ConnectSpotifyCallbackCard } from "@/app/_components/Connect-spotify-callback-card";
 
 export default function ConnectSpotifyCallbackPage() {
-  return <ConnectSpotifyCallback />;
+  return <ConnectSpotifyCallbackCard />;
 }
