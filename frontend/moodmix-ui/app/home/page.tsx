@@ -7,6 +7,9 @@ import Image from "next/image";
 import MusicListener from "@/public/MusicListener.png";
 import { Card } from "@/components/ui/card";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
+import { useAppStore } from "@/store/appStore";
+import { toast } from "sonner";
+import type { BuildResponseDTO } from "@/slices/playlist/playlistDTO";
 
 export default function HomePage() {
   const placeholders = [
@@ -18,14 +21,72 @@ export default function HomePage() {
   ];
 
   const [value, setValue] = React.useState("");
+  const [inputBusy, setInputBusy] = React.useState(false);
+  const [clearVersion, setClearVersion] = React.useState(0); // bumps to tell child to clear
+
+  // just the chained action
+  const planThenBuild = useAppStore((s) => s.planThenBuild);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
   };
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("submitted:", value);
+    const mood = value.trim();
+    if (!mood) return;
+
+    setInputBusy(true);
+
+    // Wrap the action in a promise so toast.promise can reflect loading/success/error
+    const task: Promise<BuildResponseDTO> = (async () => {
+      const buildRes = (await planThenBuild({
+        mood,
+      })) as BuildResponseDTO | void;
+
+      // Decide success based on slice state after the action resolves
+      const { playlistStatus, playlistError } = useAppStore.getState();
+      if (playlistStatus !== "succeeded" || !buildRes) {
+        throw new Error(playlistError || "Playlist Generation Failed");
+      }
+      return buildRes;
+    })();
+
+    toast.promise(task, {
+      loading: "We are preparing your MoodMix4U playlist ~ 2 - 5 min",
+      success: "Playlist Successfully Created",
+      error: "Playlist Generation Failed",
+    });
+
+    try {
+      const buildRes = await task;
+
+      // After success: show info sonner with bold, underlined link opening in a new tab
+      const spotifyUrl = buildRes?.playlist?.external_urls?.spotify;
+      if (spotifyUrl) {
+        toast.info(
+          <span>
+            Click{" "}
+            <a
+              href={spotifyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-semibold"
+            >
+              here
+            </a>{" "}
+            to view playlist from Spotify
+          </span>
+        );
+      }
+    } catch {
+      // errors are already surfaced by the toast
+    } finally {
+      // Clear regardless of success/failure and re-enable input
+      setClearVersion((v) => v + 1);
+      setValue("");
+      setInputBusy(false);
+    }
   };
 
   return (
@@ -61,6 +122,12 @@ export default function HomePage() {
                 placeholders={placeholders}
                 onChange={handleChange}
                 onSubmit={onSubmit}
+                // simple client-side guards
+                minLength={2}
+                maxLength={120}
+                // parent-controlled disabled/clearing
+                busy={inputBusy}
+                clearVersion={clearVersion}
               />
             </div>
           </div>

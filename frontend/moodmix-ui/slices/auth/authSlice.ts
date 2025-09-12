@@ -1,3 +1,4 @@
+// slices/auth/authSlice.ts
 import { StateCreator } from "zustand";
 import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
 import { auth } from "@/firebase/firebaseConfig";
@@ -175,6 +176,7 @@ export const createAuthSlice: StateCreator<
           // No user (cold start or cross-tab sign out): reset dependent slices
           get().resetAllSpotify?.();
           get().resetAllPlaylist?.();
+
           set(
             {
               authUser: null,
@@ -202,6 +204,7 @@ export const createAuthSlice: StateCreator<
           await fbSignOut(auth).catch(() => {});
           get().resetAllSpotify?.();
           get().resetAllPlaylist?.();
+
           set(
             {
               authUser: null,

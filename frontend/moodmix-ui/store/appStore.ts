@@ -1,3 +1,4 @@
+// store/appStore.ts
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { createAuthSlice, type AuthSlice } from "@/slices/auth/authSlice";

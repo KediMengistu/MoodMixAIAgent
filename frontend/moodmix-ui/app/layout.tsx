@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/app/_components/Theme-provider";
 import { StoreWrapper } from "@/app/_components/Store-wrapper";
+import { Toaster } from "@/components/ui/sonner"; // ← requires `npx shadcn@latest add sonner`
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -39,6 +40,18 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <StoreWrapper>{children}</StoreWrapper>
+
+          {/* Sonner toasts (bottom-center as requested) */}
+          <Toaster
+            richColors
+            expand={false}
+            visibleToasts={2}
+            position="bottom-center"
+            closeButton
+            toastOptions={{
+              className: "flex items-center justify-center text-center",
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>
