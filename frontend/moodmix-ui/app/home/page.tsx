@@ -53,7 +53,7 @@ export default function HomePage() {
     })();
 
     toast.promise(task, {
-      loading: "We are preparing your MoodMix4U playlist ~ 2 - 5 min",
+      loading: "We are preparing your MoodMix4U playlist...",
       success: "Playlist Successfully Created",
       error: "Playlist Generation Failed",
     });
@@ -109,8 +109,8 @@ export default function HomePage() {
               className="h-[200px] object-contain"
               priority
             />
-            <h1 className="text-md font-normal text-center italic">
-              Hey there! I am your MoodMixer DJ. <br /> How are you feeling
+            <h1 className="text-md font-light text-center">
+              Hey there, I am your MoodMixer DJ! <br /> How are you feeling
               today?
             </h1>
           </div>

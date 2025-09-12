@@ -82,6 +82,40 @@ export const createPlaylistSlice: StateCreator<
     };
   };
 
+  // Heuristic detector for Spotify token-related failures coming back from the server.
+  // If this returns true, we flip `spotifyUnconfirmed=true` to trigger the issue route → auto-logout.
+  const isSpotifyTokenFailure = (status: number, body: any): boolean => {
+    if (status === 401) return true; // unauthorized at Spotify boundary is the most reliable signal
+
+    // Some backends surface token problems as 400/403 with helpful details.
+    const detail = String(body?.detail ?? "").toLowerCase();
+    const topLevelError = String(body?.error ?? "").toLowerCase();
+    const spError = String(body?.spotify_response?.error ?? "").toLowerCase();
+
+    const msg = `${detail} ${topLevelError} ${spError}`;
+    const hints = [
+      "token",
+      "expired",
+      "revoked",
+      "invalid_grant",
+      "invalid token",
+      "no refresh token",
+      "missing refresh token",
+      "reauthorize",
+      "authorization",
+      "refresh",
+    ];
+
+    const looksLikeTokenMsg = hints.some((h) => msg.includes(h));
+    if (
+      (status === 400 || status === 403) &&
+      (looksLikeTokenMsg || spError === "invalid_grant")
+    ) {
+      return true;
+    }
+    return false;
+  };
+
   const initialState = {
     playlistMoodInput: "",
     playlistError: null as string | null,
@@ -221,15 +255,30 @@ export const createPlaylistSlice: StateCreator<
         const body = (await res.json().catch(() => ({}))) as BuildResponseDTO;
 
         if (!res.ok) {
-          set(
-            {
-              playlistStatus: "failed",
-              playlistError: (body as any)?.detail ?? "Build failed",
-              playlistErrorCode: code,
-            },
-            false,
-            "playlist/build:failed"
-          );
+          const tokenRelated = isSpotifyTokenFailure(code, body);
+          if (tokenRelated) {
+            // Mark as unconfirmed so StoreWrapper routes to /spotify-issue → auto-logout.
+            set(
+              {
+                playlistStatus: "failed",
+                playlistError: (body as any)?.detail ?? "Build failed",
+                playlistErrorCode: code,
+                spotifyUnconfirmed: true,
+              } as Partial<AppState>,
+              false,
+              "playlist/build:failed:token-unconfirmed"
+            );
+          } else {
+            set(
+              {
+                playlistStatus: "failed",
+                playlistError: (body as any)?.detail ?? "Build failed",
+                playlistErrorCode: code,
+              },
+              false,
+              "playlist/build:failed"
+            );
+          }
           return;
         }
 

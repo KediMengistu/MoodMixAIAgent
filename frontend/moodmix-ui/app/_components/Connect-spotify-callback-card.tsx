@@ -20,7 +20,7 @@ import ConnectSpotifyCallbackLoading from "@/public/ConnectSpotifyCallbackLoadin
  *   which StoreWrapper will detect and route to /spotify-issue.
  * - On success, the slice sets spotifyConnected=true; StoreWrapper will route to /home.
  */
-export function ConnectSpotifyCallback({
+export function ConnectSpotifyCallbackCard({
   className,
   ...props
 }: React.ComponentProps<"div">) {
