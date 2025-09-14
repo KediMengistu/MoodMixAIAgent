@@ -8,7 +8,7 @@ export default function HomePageLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-[391px] grid grid-rows-[auto_1fr] h-full w-full overflow-y-auto">
+    <div className="relative grid grid-rows-[auto_1fr] h-full w-full overflow-y-auto">
       <NavBar />
       {children}
     </div>

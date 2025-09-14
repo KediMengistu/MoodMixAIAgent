@@ -92,15 +92,15 @@ export default function HomePage() {
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key="architecture-container"
+        key="home-page"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         style={{ willChange: "transform", backfaceVisibility: "hidden" }}
-        className="h-full w-full p-2"
+        className="min-h-[391px] h-full w-full p-2 overflow-y-hidden"
       >
-        <Card className="h-full w-full flex flex-col items justify-center bg-transparent hover:cursor-default p-2 border-1">
+        <Card className="h-full w-full flex flex-col items justify-center bg-transparent hover:cursor-default p-2 border-1 overflow-y-auto scrollbar-hide">
           {/* Top: image + greeting */}
           <div className="flex flex-col items-center justify-end h-fit gap-2 ">
             <Image
