@@ -4,12 +4,22 @@
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/store/appStore";
 import { PlaylistSkeletonGrid } from "@/app/_components/Playlist-skeleton-grid";
+import PlaylistGrid from "@/app/_components/Playlist-grid";
 import type { PlaylistItemDTO } from "@/slices/playlist/playlistDTO";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationLink,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import { cn } from "@/lib/utils";
 
-const PAGE_LIMIT = 25; // matches the 5x5 max grid
+const PAGE_LIMIT = 10; // 5x2 target (desktop), responsive down to 3x3 and 1x1
 
 export default function MyPlaylistsPage() {
   const listPlaylists = useAppStore((s) => s.listPlaylists);
@@ -24,7 +34,6 @@ export default function MyPlaylistsPage() {
     (nextOffset: number) => {
       if (timerRef.current) clearTimeout(timerRef.current);
       setDelaying(true);
-
       // 3s intentional delay -> show skeleton grid
       timerRef.current = setTimeout(async () => {
         setOffset(nextOffset);
@@ -45,8 +54,28 @@ export default function MyPlaylistsPage() {
   const isLoading = delaying || status === "loading";
   const items: PlaylistItemDTO[] = playlistList?.results ?? [];
 
-  const canPrev = offset > 0;
-  const canNext = typeof playlistList?.next_offset === "number";
+  // Use backend-provided pagination info when available
+  const respLimit = playlistList?.limit ?? PAGE_LIMIT;
+  const respOffset = playlistList?.offset ?? offset;
+  const totalCount = playlistList?.count ?? 0;
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / respLimit));
+  const currentPage = Math.floor(respOffset / respLimit) + 1;
+  const canPrev = currentPage > 1;
+  const canNext = currentPage < totalPages;
+
+  const goToPage = (page: number) => {
+    const nextOffset = (page - 1) * respLimit;
+    triggerView(nextOffset);
+  };
+
+  const getPageNumbers = (total: number, current: number) => {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (current <= 4) return [1, 2, 3, 4, 5, "...", total];
+    if (current >= total - 3)
+      return [1, "...", total - 4, total - 3, total - 2, total - 1, total];
+    return [1, "...", current - 1, current, current + 1, "...", total];
+  };
 
   return (
     <AnimatePresence mode="wait">
@@ -59,94 +88,92 @@ export default function MyPlaylistsPage() {
         style={{ willChange: "transform", backfaceVisibility: "hidden" }}
         className="min-h-[391px] h-full w-full p-2 overflow-y-hidden"
       >
-        <Card className="h-full w-full bg-transparent p-3 border-1 space-y-4 overflow-y-auto scrollbar-hide rounded-none">
+        <Card className="h-full w-full p-3 border-1 space-y-2 overflow-y-auto scrollbar-hide rounded-none">
           {/* GRID */}
           {isLoading ? (
             <PlaylistSkeletonGrid />
           ) : items.length ? (
-            <div className="grid gap-3 grid-cols-1 sm:grid-cols-3 xl:grid-cols-5">
-              {items.map((p) => (
-                <Card
-                  key={p.id}
-                  className="group relative overflow-hidden rounded-xl border p-3 bg-card transition-colors duration-200 hover:bg-muted dark:hover:bg-muted-500 shadow-sm hover:shadow-md cursor-pointer"
-                >
-                  {/* cover (same dimensions as the skeleton) */}
-                  <div className="relative w-full aspect-square overflow-hidden rounded-md bg-muted/30">
-                    {p.cached_images?.[0]?.url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={p.cached_images[0].url}
-                        alt={p.name}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                        loading="lazy"
-                      />
-                    ) : null}
-                  </div>
+            <div className="space-y-4">
+              <PlaylistGrid
+                items={items}
+                onItemClick={(item) => {
+                  // place navigation or modal open here if desired
+                }}
+              />
 
-                  {/* text block (same rhythm as skeleton) */}
-                  <div className="mt-2 space-y-2">
-                    <div
-                      className="text-sm font-medium truncate"
-                      title={p.name}
-                    >
-                      {p.name}
-                    </div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      {p.cached_description ?? p.mood}
-                    </div>
+              {/* Pagination renders only when we have more than one page */}
+              {totalPages > 1 && (
+                <div className="space-y-2">
+                  <Pagination>
+                    <PaginationContent className="justify-between sm:justify-center">
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          className={cn(
+                            (!canPrev || isLoading) &&
+                              "pointer-events-none opacity-50"
+                          )}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (!canPrev || isLoading) return;
+                            goToPage(currentPage - 1);
+                          }}
+                        />
+                      </PaginationItem>
 
-                    {p.spotify_url ? (
-                      <a
-                        href={p.spotify_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block text-xs underline"
-                      >
-                        Open in Spotify
-                      </a>
-                    ) : null}
-                  </div>
-                </Card>
-              ))}
+                      {getPageNumbers(totalPages, currentPage).map((v, i) =>
+                        v === "..." ? (
+                          <PaginationItem key={`ellipsis-${i}`}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        ) : (
+                          <PaginationItem key={`p-${v}`}>
+                            <PaginationLink
+                              href="#"
+                              isActive={v === currentPage}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (v !== currentPage && !isLoading)
+                                  goToPage(v as number);
+                              }}
+                            >
+                              {v}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      )}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          className={cn(
+                            (!canNext || isLoading) &&
+                              "pointer-events-none opacity-50"
+                          )}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (!canNext || isLoading) return;
+                            goToPage(currentPage + 1);
+                          }}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+
+                  {/* Tight, muted notice below pagination */}
+                  <p className="text-center text-[9px] text-muted-foreground">
+                    MoodMix4U playlist data may be up to 24 hours out of date.
+                    If you deleted a playlist in Spotify, it may still appear
+                    here until the daily refresh completes.
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center text-sm text-muted-foreground py-10">
               No playlists yet.
             </div>
           )}
-
-          {/* PAGINATION */}
-          <div className="flex items-center justify-between pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!canPrev || isLoading}
-              onClick={() => triggerView(Math.max(0, offset - PAGE_LIMIT))}
-            >
-              Previous
-            </Button>
-            <div className="text-xs text-muted-foreground">
-              {playlistList
-                ? `Showing ${items.length} · Offset ${offset}`
-                : isLoading
-                ? "Loading…"
-                : ""}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!canNext || isLoading}
-              onClick={() =>
-                triggerView(
-                  typeof playlistList?.next_offset === "number"
-                    ? playlistList.next_offset
-                    : offset + PAGE_LIMIT
-                )
-              }
-            >
-              Next
-            </Button>
-          </div>
         </Card>
       </motion.div>
     </AnimatePresence>
