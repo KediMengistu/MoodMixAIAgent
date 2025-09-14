@@ -129,6 +129,10 @@ export default function HomePage() {
                 busy={inputBusy}
                 clearVersion={clearVersion}
               />
+              {/* Notice directly under the input (identical styling to your other notice) */}
+              <p className="text-center text-[9px] text-muted-foreground p-1">
+                MoodMix4U can make mistakes.
+              </p>
             </div>
           </div>
         </Card>

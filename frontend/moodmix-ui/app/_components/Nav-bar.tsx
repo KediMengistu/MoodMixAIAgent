@@ -11,7 +11,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
 import { Menu as MenuIcon } from "lucide-react";
 import { BsMusicNoteBeamed } from "react-icons/bs";
 import { useAppStore } from "@/store/appStore";
@@ -69,6 +68,9 @@ export function NavBar() {
   const status = useAppStore((s) => s.authStatus);
   const router = useRouter();
 
+  // Control the Popover open state so we can close it after a selection
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
   // Optional route overrides
   const CLICK_ROUTES: Record<string, string> = {
     "Create Playlist": "/home",
@@ -84,63 +86,65 @@ export function NavBar() {
         "rounded-none dark:bg-black"
       )}
     >
-      {/* COL 1: Single popover menu + sign out (same on mobile & desktop) */}
+      {/* COL 1: Single popover menu + sign out */}
       <div className="flex items-center gap-2">
-        <Popover>
-          <PopoverTrigger asChild className="hover:cursor-pointer">
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild className="cursor-pointer">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 cursor-pointer"
               aria-label="Open menu"
             >
               <MenuIcon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
 
-          <PopoverContent align="start" className="w-72 p-1" role="menu">
+          {/* Make the whole menu area show a pointer, including all descendants */}
+          <PopoverContent
+            align="start"
+            className="w-72 p-1 cursor-pointer [&_*]:cursor-pointer"
+            role="menu"
+          >
             <nav className="flex flex-col">
               {NAV_LINKS.map((group, gi) => (
                 <React.Fragment key={group.label + gi}>
                   <div className="py-1">
-                    <div className="px-2 py-1.5 text-[11px] font-normal text-muted-foreground">
+                    <div className="px-2 py-1.5 text-[11px] font-normal text-muted-foreground underline underline-offset-4">
                       {group.label}
                     </div>
                     <ul className="flex flex-col">
-                      {group.items.map((item, ii) => (
+                      {group.items.map((item) => (
                         <React.Fragment key={item.label}>
                           <li>
                             <a
                               href={item.href}
                               role="menuitem"
-                              className="block rounded-md px-3 py-1.5 text-xs font-medium hover:bg-accent hover:text-accent-foreground"
+                              className="block rounded-md px-3 py-1.5 text-xs font-normal hover:bg-accent hover:text-accent-foreground"
                               onClick={(e) => {
+                                // Always close the menu when an item is chosen
+                                setMenuOpen(false);
+
                                 const to = CLICK_ROUTES[item.label];
                                 if (to) {
                                   e.preventDefault();
                                   router.push(to);
                                 }
+                                // If no route override, let the default anchor navigate (hash link)
                               }}
                             >
                               <div className="leading-tight">{item.label}</div>
                               {item.description ? (
-                                <div className="text-[11px] text-muted-foreground leading-snug">
+                                <div className="text-[10px] text-muted-foreground leading-snug italic">
                                   {item.description}
                                 </div>
                               ) : null}
                             </a>
                           </li>
-
-                          {/* Subsection separator (between items only) */}
-                          {ii < group.items.length - 1 && (
-                            <Separator className="my-1" />
-                          )}
                         </React.Fragment>
                       ))}
                     </ul>
                   </div>
-
-                  {/* Major section separator removed */}
                 </React.Fragment>
               ))}
             </nav>
@@ -150,7 +154,7 @@ export function NavBar() {
         <Button
           variant="outline"
           size="sm"
-          className="h-7 px-3 text-[11px] rounded-full shadow-none hover:cursor-pointer"
+          className="h-7 px-3 text-[11px] rounded-full shadow-none cursor-pointer font-normal"
           onClick={async () => {
             await logout();
           }}
