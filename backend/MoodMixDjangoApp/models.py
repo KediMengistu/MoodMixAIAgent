@@ -1,18 +1,50 @@
 import re
 import unicodedata
+import uuid
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
+# ---- ID generation: 22-char base62 (alphanumeric) from UUID4 ----
+_ALPHABET62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+def gen_alphanum_id() -> str:
+    """
+    Deterministically encodes a UUID4 (128 bits) into base62.
+    Result length is always 22 chars (since 62^22 > 2^128).
+    """
+    n = uuid.uuid4().int
+    out = []
+    while n:
+        n, rem = divmod(n, 62)
+        out.append(_ALPHABET62[rem])
+    s = "".join(reversed(out)) or "0"
+    return s.zfill(22)  # fixed width
+
+
+def normalize_name_key(s: str) -> str:
+    s = unicodedata.normalize("NFKC", s or "")
+    s = s.strip()
+    s = re.sub(r"\s+", " ", s)  # collapse internal whitespace
+    return s.casefold()         # better than lower()
+
+
 class UserProfile(models.Model):
+    """
+    App-level profile for an auth.User. Uses a string primary key.
+    """
+    id = models.CharField(primary_key=True, max_length=22, default=gen_alphanum_id, editable=False)
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="profile",
-        unique=True,
+        unique=True,  # redundant for OneToOneField but fine to keep
     )
+
     # Firebase identity
     firebase_uid = models.CharField(max_length=128, unique=True, db_index=True)
     firebase_email = models.EmailField(null=True, blank=True, unique=True)
@@ -31,6 +63,10 @@ class UserProfile(models.Model):
     # last successful MoodMix playlist creation time (for 24h cooldown)
     last_playlist_create_time = models.DateTimeField(null=True, blank=True, db_index=True)
 
+    # ---- plan-then-build concurrency lease ----
+    plan_then_build_pending = models.BooleanField(default=False, db_index=True)
+    plan_then_build_started_at = models.DateTimeField(null=True, blank=True, db_index=True)
+
     created_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -42,6 +78,8 @@ class SpotifyAuthState(models.Model):
     Many states per profile to allow multi-tab flows.
     Each row is single-use and time-limited.
     """
+    id = models.CharField(primary_key=True, max_length=22, default=gen_alphanum_id, editable=False)
+
     profile = models.ForeignKey(
         UserProfile,
         on_delete=models.CASCADE,
@@ -66,19 +104,14 @@ class SpotifyAuthState(models.Model):
         return f"state:{self.state} profile:{self.profile_id} used:{bool(self.used_at)}"
 
 
-def normalize_name_key(s: str) -> str:
-    s = unicodedata.normalize("NFKC", s or "")
-    s = s.strip()
-    s = re.sub(r"\s+", " ", s)  # collapse internal whitespace
-    return s.casefold()         # better than lower()
-
-
 class PlaylistProfile(models.Model):
     """
     Persisted row whenever we create a playlist via /build.
     Also holds a *minimal* cache/snapshot of display metadata from Spotify.
     Spotify remains the source of truth; the cache is for latency & quota.
     """
+    id = models.CharField(primary_key=True, max_length=22, default=gen_alphanum_id, editable=False)
+
     owner = models.ForeignKey(
         UserProfile,
         on_delete=models.CASCADE,
@@ -148,7 +181,7 @@ class PlaylistProfile(models.Model):
     def is_cache_stale(self, ttl_seconds: int, fresh_within_seconds: int | None = None) -> bool:
         """
         Returns True if the cached metadata is too old.
-        - ttl_seconds: general TTL for lazy refresh (e.g., 7 days)
+        - ttl_seconds: general TTL for lazy refresh (e.g., 24h)
         - fresh_within_seconds: stricter freshness requirement the caller can pass
         """
         required_fresh = int(fresh_within_seconds) if fresh_within_seconds is not None else int(ttl_seconds)
