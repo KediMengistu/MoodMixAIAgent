@@ -17,8 +17,8 @@ from MoodMixDjangoApp.llm.planner_schema import MoodPlan
 from MoodMixDjangoApp.llm.selector import select_tracks, LibraryItem
 
 # Popularity thresholds (0..100). Can be overridden via env, else sensible defaults.
-MIN_TRACK_POP = int(os.getenv("MOODMIX_MIN_TRACK_POP", "35"))
-MIN_ARTIST_POP = int(os.getenv("MOODMIX_MIN_ARTIST_POP", "35"))
+MIN_TRACK_POP = int(os.getenv("MOODMIX_MIN_TRACK_POP", "50"))
+MIN_ARTIST_POP = int(os.getenv("MOODMIX_MIN_ARTIST_POP", "45"))
 
 
 @dataclass
