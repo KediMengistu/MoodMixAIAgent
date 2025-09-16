@@ -31,6 +31,29 @@ export default function HomePage() {
     setValue(e.target.value);
   };
 
+  // Map custom backend 429s to friendly messages
+  const rateLimitMessage = () => {
+    const { playlistErrorCode, playlistError } = useAppStore.getState();
+    if (playlistErrorCode === 429) {
+      const msg = (playlistError || "").toLowerCase();
+
+      // 24h cooldown (plan + build variants)
+      if (
+        msg.includes("one moodmix build per 24h") ||
+        msg.includes("planning is blocked accordingly")
+      ) {
+        return "Must wait 24 hours to make new playlist.";
+      }
+
+      // Concurrency lease (planning/build in progress)
+      if (msg.includes("already in progress")) {
+        return "A playlist is currently being generated.";
+      }
+    }
+    // Fallback to the current generic message
+    return "Playlist Generation Failed";
+  };
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const mood = value.trim();
@@ -55,7 +78,8 @@ export default function HomePage() {
     toast.promise(task, {
       loading: "We are preparing your MoodMix4U playlist...",
       success: "Playlist Successfully Created",
-      error: "Playlist Generation Failed",
+      // Use our custom mapper for 429s; everything else stays as-is
+      error: () => rateLimitMessage(),
     });
 
     try {
@@ -130,7 +154,7 @@ export default function HomePage() {
                 clearVersion={clearVersion}
               />
               {/* Notice directly under the input (identical styling to your other notice) */}
-              <p className="text-center text-[9px] text-muted-foreground p-1">
+              <p className="text-center text-[11px] text-muted-foreground p-1">
                 MoodMix4U can make mistakes.
               </p>
             </div>

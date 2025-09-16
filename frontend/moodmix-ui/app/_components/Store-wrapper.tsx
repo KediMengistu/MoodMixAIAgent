@@ -12,6 +12,7 @@ export function StoreWrapper({ children }: { children: React.ReactNode }) {
   // store state
   const authInitListener = useAppStore((s) => s.authInitListener);
   const authLoggedIn = useAppStore((s) => s.authLoggedIn);
+  const authStatus = useAppStore((s) => s.authStatus);
 
   const spotifyInitiatedConnect = useAppStore((s) => s.spotifyInitiatedConnect);
   const spotifyConnected = useAppStore((s) => s.spotifyConnected);
@@ -31,6 +32,14 @@ export function StoreWrapper({ children }: { children: React.ReactNode }) {
       if (typeof unsub === "function") unsub();
     };
   }, [storePersist]);
+
+  // Small post-hydration grace so we don't route while auth is still bootstrapping.
+  const [bootReady, setBootReady] = React.useState(false);
+  React.useEffect(() => {
+    if (!hydrated) return;
+    const t = setTimeout(() => setBootReady(true), 700); // ~0.7s is usually enough for onAuthStateChanged + handshake
+    return () => clearTimeout(t);
+  }, [hydrated]);
 
   // Attach the Firebase auth listener exactly once, after hydration
   const didAttachAuthRef = React.useRef(false);
@@ -53,14 +62,15 @@ export function StoreWrapper({ children }: { children: React.ReactNode }) {
 
     // (A) Always give the callback route priority (prevents flicker to "/" or connect)
     if (isCallback) {
-      // If callback failed (403, etc.) → go to issue page
-      if (!spotifyConnected && spotifyStatus === "failed") {
-        router.replace(R.issue);
-        return;
-      }
       // If callback succeeded → go home
       if (spotifyConnected) {
         router.replace(R.home);
+        return;
+      }
+      // Only treat "failed" as an error if we are NOT in the "start connect flow" state.
+      // This ignores refresh's 400 while the callback is still finishing.
+      if (spotifyStatus === "failed" && !spotifyInitiatedConnect) {
+        router.replace(R.issue);
         return;
       }
       // Otherwise, remain on callback while the callback action resolves.
@@ -69,6 +79,10 @@ export function StoreWrapper({ children }: { children: React.ReactNode }) {
 
     // (B) Do not run other routing until persist is hydrated
     if (!hydrated) return;
+
+    // (B2) While auth is bootstrapping, don't apply "kick to /" yet.
+    // This avoids the refresh bounce to "/" before onAuthStateChanged + handshake finish.
+    if (!bootReady || authStatus === "loading") return;
 
     // (C) Not logged in → go to "/"
     if (!authLoggedIn) {
@@ -100,6 +114,8 @@ export function StoreWrapper({ children }: { children: React.ReactNode }) {
   }, [
     pathName,
     hydrated,
+    bootReady,
+    authStatus,
     authLoggedIn,
     spotifyConnected,
     spotifyInitiatedConnect,
