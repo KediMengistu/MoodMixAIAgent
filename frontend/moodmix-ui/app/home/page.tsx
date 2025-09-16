@@ -124,7 +124,7 @@ export default function HomePage() {
         style={{ willChange: "transform", backfaceVisibility: "hidden" }}
         className="min-h-[391px] h-full w-full p-2 overflow-y-hidden"
       >
-        <Card className="h-full w-full flex flex-col items justify-center bg-transparent hover:cursor-default p-2 border-1 overflow-y-auto scrollbar-hide">
+        <Card className="h-full w-full flex flex-col justify-center bg-transparent hover:cursor-default p-2 border-1 overflow-y-auto scrollbar-hide rounded-none">
           {/* Top: image + greeting */}
           <div className="flex flex-col items-center justify-end h-fit gap-2 ">
             <Image

@@ -30,17 +30,17 @@ const NAV_LINKS: NavLinkGroup[] = [
     items: [
       {
         label: "Purpose",
-        href: "#about-purpose",
+        href: "/home/about-purpose",
         description: "What it does and who it’s for.",
       },
       {
         label: "Architecture",
-        href: "#about-architecture",
+        href: "/home/about-architecture",
         description: "How the parts connect.",
       },
       {
         label: "Tech Stack",
-        href: "#about-tech-stack",
+        href: "/home/about-tech-stack",
         description: "Frameworks and services.",
       },
     ],
@@ -51,12 +51,12 @@ const NAV_LINKS: NavLinkGroup[] = [
     items: [
       {
         label: "Create Playlist",
-        href: "#playlist-create",
+        href: "/home",
         description: "Generate mood-based mixes.",
       },
       {
         label: "View Playlist",
-        href: "#playlist-view",
+        href: "/home/my-playlists",
         description: "Browse and manage your mixes.",
       },
     ],
@@ -71,8 +71,13 @@ export function NavBar() {
   // Control the Popover open state so we can close it after a selection
   const [menuOpen, setMenuOpen] = React.useState(false);
 
-  // Optional route overrides
+  // Route overrides to force client-side navigation via router.push
   const CLICK_ROUTES: Record<string, string> = {
+    // About
+    Purpose: "/home/about-purpose",
+    Architecture: "/home/about-architecture",
+    "Tech Stack": "/home/about-tech-stack",
+    // Playlist
     "Create Playlist": "/home",
     "View Playlist": "/home/my-playlists",
   };
@@ -130,12 +135,12 @@ export function NavBar() {
                                   e.preventDefault();
                                   router.push(to);
                                 }
-                                // If no route override, let the default anchor navigate (hash link)
+                                // If no route override is found, allow the anchor to navigate normally
                               }}
                             >
                               <div className="leading-tight">{item.label}</div>
                               {item.description ? (
-                                <div className="text-[10px] text-muted-foreground leading-snug italic">
+                                <div className="text-[10px] text-muted-foreground leading-snug">
                                   {item.description}
                                 </div>
                               ) : null}
