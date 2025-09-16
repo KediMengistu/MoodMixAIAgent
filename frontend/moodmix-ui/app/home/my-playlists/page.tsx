@@ -88,7 +88,7 @@ export default function MyPlaylistsPage() {
         style={{ willChange: "transform", backfaceVisibility: "hidden" }}
         className="min-h-[391px] h-full w-full p-2 overflow-y-hidden"
       >
-        <Card className="h-full w-full p-3 border-1 space-y-2 overflow-y-auto scrollbar-hide rounded-none">
+        <Card className="h-full w-full p-3 border-1 space-y-2 overflow-y-auto scrollbar-hide rounded-none bg-transparent">
           {/* GRID */}
           {isLoading ? (
             <PlaylistSkeletonGrid />
@@ -170,8 +170,10 @@ export default function MyPlaylistsPage() {
               )}
             </div>
           ) : (
-            <div className="text-center text-sm text-muted-foreground py-10">
-              No playlists yet.
+            <div className="h-full w-full flex items-center justify-center">
+              <div className="text-center text-sm text-muted-foreground underline">
+                No playlists yet.
+              </div>
             </div>
           )}
         </Card>
