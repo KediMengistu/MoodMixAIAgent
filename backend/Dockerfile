@@ -9,14 +9,47 @@ RUN python -m pip install --upgrade pip \
 # ---- runtime ----
 FROM python:3.13.3-slim
 WORKDIR /app
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8000
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Non-root
 RUN adduser --disabled-password --gecos "" appuser
+
+# Deps
 COPY --from=build /wheels /wheels
 COPY requirements.txt .
 RUN python -m pip install --upgrade pip \
  && pip install --no-index --find-links=/wheels -r requirements.txt
+
+# App
 COPY . /app
+
+# Collect static at build time.
+# Provide a dummy SECRET_KEY just for this step so Django doesn't complain.
+# (Cloud Run env vars will override this at runtime.)
+RUN SECRET_KEY=dummy-for-collectstatic python manage.py collectstatic --noinput
+
+RUN chown -R appuser:appuser /app
 USER appuser
-EXPOSE 8000
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]  
-# swap to gunicorn later
+
+# Cloud Run expects the app to listen on $PORT (default 8080)
+EXPOSE 8080
+
+# Tunables (adjust later based on load)
+ENV WEB_CONCURRENCY=2 \
+    WEB_THREADS=8 \
+    GUNICORN_TIMEOUT=120 \
+    GUNICORN_MAX_REQUESTS=1000 \
+    GUNICORN_MAX_REQUESTS_JITTER=100
+
+# Better logging to stdout, and bind to $PORT
+CMD ["bash", "-lc", "gunicorn MoodMixDjangoProject.wsgi:application \
+  --bind :${PORT:-8080} \
+  --workers ${WEB_CONCURRENCY} \
+  --threads ${WEB_THREADS} \
+  --timeout ${GUNICORN_TIMEOUT} \
+  --max-requests ${GUNICORN_MAX_REQUESTS} \
+  --max-requests-jitter ${GUNICORN_MAX_REQUESTS_JITTER} \
+  --access-logfile - \
+  --error-logfile -"]
