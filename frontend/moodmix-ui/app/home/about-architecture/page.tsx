@@ -23,7 +23,7 @@ export default function AboutArchitecturePage() {
               <h1 className="text-lg font-bold text-center underline dark:text-white not-italic mb-0.5">
                 MoodMix4U - Architecture
               </h1>
-              <ul className="list-disc list-inside text-[10px] md:text-[12px] text-left">
+              <ul className="list-disc list-inside text-[10px] md:text-[12px] text-left flex flex-col gap-1">
                 <li className="font-bold not-italic text-black dark:text-white">
                   Front facing App (Next.js on Vercel):
                   <span className="font-normal text-muted-foreground">
