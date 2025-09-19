@@ -74,22 +74,19 @@ export function LoginForm({
                       <span className="sr-only">Login with Google</span>
                     </Button>
 
-                    {/* Beta access notice */}
+                    {/* Beta access notice (plain text email) */}
                     <p
                       role="note"
                       className="mt-3 text-xs md:text-sm text-muted-foreground leading-relaxed"
                     >
                       <span className="font-semibold">READ:</span> Access is
                       limited to beta testers. <br />
-                      Only Google accounts on our allowlist can sign in. <br />{" "}
+                      Only Google accounts on our allowlist can sign in. <br />
                       To request access, email your Gmail address to:
                       <br />
-                      <a
-                        href="mailto:kedimengistu@gmail.com"
-                        className="underline underline-offset-2"
-                      >
+                      <span className="font-medium select-all">
                         kedimengistu@gmail.com
-                      </a>
+                      </span>
                       .
                     </p>
                   </div>
