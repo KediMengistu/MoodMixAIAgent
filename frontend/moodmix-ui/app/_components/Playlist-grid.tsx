@@ -40,7 +40,7 @@ export default function PlaylistGrid({ items, onItemClick }: Props) {
         return (
           <Card
             key={p.id}
-            className="group relative overflow-hidden rounded-xl border p-3 bg-card transition-colors duration-200 hover:bg-muted dark:hover:bg-muted-500 shadow-sm hover:shadow-md hover:cursor-default"
+            className="group relative overflow-hidden rounded-xl border p-3 bg-card transition-colors duration-200 hover:bg-muted dark:hover:bg-muted-500 shadow-sm hover:shadow-md hover:cursor-pointer"
             onClick={openCard}
             onKeyDown={handleKey}
             role="button"
